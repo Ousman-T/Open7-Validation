@@ -2,15 +2,22 @@ const express = require("express");
 const User = require("../models/User");
 const router = express.Router();
 const checkPasswordStrength = require("../middleware");
+const {check, validationResult} = require('express-validator');
 
 // add express validator logic here to check that req.body.email is actually in correct email format
-router.post("/", checkPasswordStrength, async (req, res, next) => {
+router.post("/", [checkPasswordStrength,check('email').isEmail()],  async (req, res, next) => {
   try {
-    const user = await User.create(req.body);
-    if (!user) {
-      throw new Error("No user created");
+    const result = validationResult(req);
+    if(result.isEmpty()){
+
+      const user = await User.create(req.body);
+      if (!user) {
+        throw new Error("No user created");
+      }
+      res.send(user.username);
+    }else{
+      throw new Error('Email is incorrect!');
     }
-    res.send(user.username);
   } catch (error) {
     next(error);
   }
